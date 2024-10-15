@@ -12,6 +12,34 @@ def RParam(*shape):
     return minitorch.Parameter(r)
 
 # TODO: Implement for Task 2.5.
+class Network(minitorch.Module):
+    def __init__(self, hidden_layers):
+        super().__init__()
+        self.layer1 = Linear(2, hidden_layers)
+        self.layer2 = Linear(hidden_layers, hidden_layers)
+        self.layer3 = Linear(hidden_layers, 1)
+
+    def forward(self, x):
+        a = self.layer1.forward(x).relu()
+        a = self.layer2.forward(a).relu()
+        return self.layer3.forward(a).sigmoid()
+
+class Linear(minitorch.Module):
+    def __init__(self, in_size, out_size):
+        super().__init__()
+        self.weights = RParam(in_size, out_size)
+        self.bias = RParam(out_size)
+        self.out_size = out_size
+
+    def forward(self, x):
+        """Perform matrix multiplication"""
+        x_b = x.view(*x.shape, 1)
+        weights_b = self.weights.value.view(
+            1, *self.weights.value.shape
+        )
+        v1 = x_b * weights_b
+        v2 = v1.sum(dim=1).contiguous().view(x.shape[0], self.out_size)
+        return v2 + self.bias.value.view(1, self.out_size)
 
 def default_log_fn(epoch, total_loss, correct, losses):
     print("Epoch ", epoch, " loss ", total_loss, "correct", correct)
